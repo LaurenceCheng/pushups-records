@@ -6,14 +6,16 @@ name: Python application
 on:
   push:
     branches: [ "main", "test" ]
+    paths-ignore:
+      - '**/*.png'
   pull_request:
     branches: [ "main" ]
 
-permissions:
-  contents: read
-
 jobs:
   build:
+    env: 
+      CI_COMMIT_MESSAGE: Update the automatically generated PNG
+      CI_COMMIT_AUTHOR: Continuous Integration
 
     runs-on: ubuntu-latest
 
@@ -41,7 +43,27 @@ jobs:
       uses: actions/upload-artifact@v3.1.3
       with:
         # Artifact name
-        name: test.txt # optional, default is artifact
+        name: plot.png # optional, default is artifact
         # A file, directory or wildcard pattern that describes what to upload
-        path: ./requirements.txt
+        path: ./result.png
         # The desired behavior if no files are found using the provided path.
+    # - name: GIT Commit & Push
+    #   # Only run on main branch push (e.g. after pull request merge).
+    #   if: github.event_name == 'push'
+    #   run: |
+    #     git config user.name 'github-actions[bot]'
+    #     git config user.email 'github-actions[bot]@users.noreply.github.com'
+    #     git commit -a -m "${{ env.CI_COMMIT_MESSAGE }}"
+    #     git remote set-url origin https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}
+    #     git push
+    - name: GitHub Commit & Push
+      # You may pin to the exact commit or the version.
+      # uses: actions-js/push@156f2b10c3aa000c44dbe75ea7018f32ae999772
+      uses: actions-js/push@v1.4
+      with:
+        # Token for the repo. Can be passed in using $\{{ secrets.GITHUB_TOKEN }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        # Commit message.
+        message: "Update the automatically generated PNG"
+        # Destination branch to push changes
+        branch: test
