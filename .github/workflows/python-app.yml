@@ -10,6 +10,10 @@ on:
       - '**/*.png'
   pull_request:
     branches: [ "main" ]
+  workflow_run:
+    workflows: ["Insert data into CSV"]
+    types:
+      - completed
 
 jobs:
   build:
