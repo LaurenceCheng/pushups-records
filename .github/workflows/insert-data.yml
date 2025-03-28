@@ -1,0 +1,43 @@
+name: Insert data into CSV
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Date to insert (YYYY/MM/DD)'
+        required: true
+      number:
+        description: 'Number to insert'
+        required: true
+
+jobs:
+  insert-to-csv:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Insert data to CSV
+        run: |
+          TMP_FILE=$(mktemp)
+          head -n 1 pushup.csv > "$TMP_FILE"   # Copy the header
+          printf '"%s",%s\n' "${{ github.event.inputs.date }}" "${{ github.event.inputs.number }}" >> "$TMP_FILE"  # Insert new row
+          tail -n +2 pushup.csv >> "$TMP_FILE"  # Append the remaining data
+          mv "$TMP_FILE" pushup.csv  # Replace the original file
+
+      - name: Extract branch name
+        id: extract_branch
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+
+      - name: Commit and push changes
+        # You may pin to the exact commit or the version.
+        # uses: actions-js/push@156f2b10c3aa000c44dbe75ea7018f32ae999772
+        uses: actions-js/push@v1.4
+        with:
+          # Token for the repo. Can be passed in using $\{{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Commit message.
+          message: "Add the data of ${{ github.event.inputs.date }}"
+          # Destination branch to push changes
+          branch: ${{ steps.extract_branch.outputs.branch }}
